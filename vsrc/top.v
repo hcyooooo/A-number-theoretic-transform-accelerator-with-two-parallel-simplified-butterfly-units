@@ -20,6 +20,7 @@ wire [10:0]gamma1_add;
 wire wen;
 wire ren;
 wire special_add;
+// 控制单元，负责状态机和基础计数器
 ctrl ctrl1
 (.clk(clk), .rstn(rstn), .start(start), .set_state(set_state), .p_max('d7), .op(op), 
  .p(p), .k(k), .i(i), .gamma0(gamma0_add), .gamma1(gamma1_add), .cur_state(cur_state), .wen(wen), .ren(ren), .special_add(special_add));
@@ -29,6 +30,7 @@ wire [10:0]oldadd0;
 wire [10:0]oldadd1;
 wire [10:0]oldadd2;
 wire [10:0]oldadd3;
+// 生成基础的读地址
 gen_oldadd gen_oldadd1
 (.special_add(special_add), .p(p), .k(k), .i(i), .oldadd0(oldadd0), .oldadd1(oldadd1), .oldadd2(oldadd2), .oldadd3(oldadd3));
 
@@ -40,6 +42,7 @@ wire [1:0]newadd2_idx;
 wire [8:0]newadd2;
 wire [1:0]newadd3_idx;
 wire [8:0]newadd3;
+// 核心模块之一，负责冲突无关的存储映射地址转换
 cfmm cfmm1
 (.oldadd0(oldadd0), .oldadd1(oldadd1), .oldadd2(oldadd2), .oldadd3(oldadd3),
 .newadd0_idx(newadd0_idx),.newadd0(newadd0), .newadd1_idx(newadd1_idx), .newadd1(newadd1), 
@@ -53,6 +56,7 @@ wire[`datawidth-1:0]bf_in1;
 wire[`datawidth-1:0]bf_in2;
 wire[`datawidth-1:0]bf_in3;
 wire[`datawidth-1:0]bf_in4;
+// 存储常数/数据的多体（Bank）存储器
 cons_rom cons_rom1
 (.clk(clk), .rstn(rstn), .ren(ren), .wen(wen), 
 .newadd0_idx(newadd0_idx),.newadd0(newadd0), .newadd1_idx(newadd1_idx), .newadd1(newadd1),
@@ -62,10 +66,11 @@ cons_rom cons_rom1
 
 wire[`datawidth-1:0]gamma1;
 wire[`datawidth-1:0]gamma2;
+// 旋转因子（Twiddle Factor）存储器
 tf_rom tf_rom1
 (.clk(clk), .rstn(rstn), .special_add(special_add), .op(op), 
 .gamma1_add(gamma0_add), .gamma2_add(gamma1_add), .gamma1(gamma1), .gamma2(gamma2));
-
+// 两个并行的蝶形运算单元（Butterfly Units），这是计算的核心
 bfu_v1 bfu1(.clk(clk), .rstn(rstn), .in1(bf_in1), .in2(bf_in2),
             .gamma(gamma1), .op(op), .p('d12289), ._p('d1073729535), .mu('d922759167), 
             .out1(bf_out1),.out2(bf_out2));
