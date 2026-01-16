@@ -6,9 +6,9 @@ module ctrl
   input [2:0]set_state,
   input [3:0]p_max,
 
-  output reg op,
-  output reg [3:0] p, //max = 15
-  output reg [8:0] k, //max = 511
+  output reg op, // BFU模式选择
+  output reg [3:0] p, //max = 15 stage log2N - 1
+  output reg [8:0] k, //max = 511 
   output reg [8:0] i, //max = 511
   output reg [10:0]gamma0,
   output     [10:0]gamma1,
@@ -23,10 +23,13 @@ parameter NTT = 3'b001;
 parameter PWP = 3'b010; // Point Wise Product
 parameter INTT = 3'b011;
 parameter MAO = 3'b100; // Multiplication and Addition Operation
+// 清空NTT流水线状态
 parameter EPL_NTT = 3'b101; // Emptying pipline
+// 清空INTT流水线状态
 parameter EPL_INTT = 3'b110; // Emptying pipline
 
 // reg [2:0] cur_state;
+// 下一状态
 reg [2:0] nxt_state;
 
 wire[3:0] begin_stage;
@@ -39,6 +42,7 @@ assign begin_stage = (set_state == NTT) ? p_max : 0;
 assign begin_gamma0 = (set_state == NTT)?'d0:((1 << (p_max+1))-2);
 assign gamma1 = special_add?((set_state == NTT)?gamma0_inc:gamma0_dec):'d0;
 
+// 完成的flag
 wire flag_fin;
 reg [2:0]bubble_cnt;
 wire [8:0]k_equ;
@@ -48,16 +52,18 @@ assign i_equ = (1 << (p-1)) - 1;
 assign flag_fin = ((cur_state == NTT) && (p == end_stage) && (k == k_equ)) || ((cur_state == INTT) && (p == end_stage) && (i == i_equ));
 assign special_add = ((cur_state == NTT) && (p == end_stage) || ((cur_state == INTT) && (p == begin_stage)));
 
+// 状态机
 always@(posedge	clk or negedge rstn)
 begin
 	if(~rstn) cur_state<=IDLE;
 	else
     begin
-        if(start) cur_state<=set_state;
+        if(start) cur_state<=set_state; // 外部set_state
         else cur_state<=nxt_state;
     end
 end
 
+// 状态的转移
 always@(*)
 begin
     case(cur_state) //synopsys full_case parallel_case
@@ -70,7 +76,7 @@ begin
         EPL_INTT:begin if(bubble_cnt == 3'b111)nxt_state=IDLE;else nxt_state=EPL_INTT;end 
     endcase
 end
-
+// 对应状态信号的生成
 always@(*)
 begin
     case(cur_state)	//synopsys full_case parallel_case
@@ -84,6 +90,7 @@ begin
     endcase
 end
 
+// 
 always@(posedge clk or posedge rstn)
 begin 
     if(~rstn)

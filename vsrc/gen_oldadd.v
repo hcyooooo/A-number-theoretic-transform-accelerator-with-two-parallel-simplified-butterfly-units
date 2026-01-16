@@ -3,9 +3,9 @@ module gen_oldadd
     // input clk,
     // input rstn,
     input special_add,
-    input [3:0] p, //max = 15
-    input [8:0] k, //max = 511
-    input [8:0] i, //max = 511
+    input [3:0] p, //max = 15 stage
+    input [8:0] k, //max = 511 组号k
+    input [8:0] i, //max = 511 组内索引
 
     output [10:0]oldadd0, // max=2047
     output [10:0]oldadd1,
@@ -14,11 +14,14 @@ module gen_oldadd
 );
 
 // k*R*J+i*PAR_D
-wire[10:0]J;assign J=1<<p;
-wire [10:0]kRJ_PLUS_iD;assign kRJ_PLUS_iD= ((k << 1) << p) + (i<<1); 
+wire[10:0]J; // 配对距离
+assign J=1<<p; // J=2^p
+wire [10:0]kRJ_PLUS_iD;
+assign kRJ_PLUS_iD= ((k << 1) << p) + (i<<1);  // base
 
 assign oldadd0 = special_add?(k << 2):kRJ_PLUS_iD;
-reg [10:0]oldadd1_tmp;assign oldadd1 = special_add?{oldadd0[10:1], 1'b1}:oldadd1_tmp;
+reg [10:0]oldadd1_tmp;
+assign oldadd1 = special_add?{oldadd0[10:1], 1'b1}:oldadd1_tmp;
 assign oldadd2 = special_add?{oldadd0[10:2], 2'b10}:{oldadd0[10:1], 1'b1};
 // reg [10:0]oldadd3_tmp;assign oldadd3 = special_add?{oldadd0[10:2], 2'b11}:oldadd3_tmp;
 assign oldadd3 = special_add?{oldadd0[10:2], 2'b11}:{oldadd1[10:1], 1'b1};

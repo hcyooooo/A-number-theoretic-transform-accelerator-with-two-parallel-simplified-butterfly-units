@@ -42,7 +42,7 @@ wire [1:0]newadd2_idx;
 wire [8:0]newadd2;
 wire [1:0]newadd3_idx;
 wire [8:0]newadd3;
-// 核心模块之一，负责冲突无关的存储映射地址转换
+// 冲突无关的存储映射地址转换
 cfmm cfmm1
 (.oldadd0(oldadd0), .oldadd1(oldadd1), .oldadd2(oldadd2), .oldadd3(oldadd3),
 .newadd0_idx(newadd0_idx),.newadd0(newadd0), .newadd1_idx(newadd1_idx), .newadd1(newadd1), 

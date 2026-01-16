@@ -13,7 +13,9 @@ REALadd cfmm(int old_add)
     ll M = (int) (log(B) / log(R)); // digit width of bank number
     ll C = T - M; // digit width of step size
     //printf("B:%lld, T:%lld, M:%lld, C:%lld", B, T, M, C);
+    // 地址的最后 M 位
     ll lower_part = BITS(old_add, M-1, 0);
+    // 除去最后 M 位剩下的所有高位
     ll higher_part = BITS(old_add, T-1, T-C);
 
     ll SN =  BITS(higher_part, 0, 0);
